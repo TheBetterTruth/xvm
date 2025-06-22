@@ -23,4 +23,27 @@
 #define 		OP_SUBI			0x12
 #define 		OP_CALL			0x13
 
+#include "vm_thread.h"
+
+void op_i0(VMThread& _Thread, uint8_t const*& _Inst);
+void op_i1(VMThread& _Thread, uint8_t const*& _Inst);
+void op_i2(VMThread& _Thread, uint8_t const*& _Inst);
+void op_i3(VMThread& _Thread, uint8_t const*& _Inst);
+void op_ic(VMThread& _Thread, uint8_t const*& _Inst);
+void op_iadd(VMThread& _Thread, uint8_t const*& _Inst);
+void op_isub(VMThread& _Thread, uint8_t const*& _Inst);
+void op_imul(VMThread& _Thread, uint8_t const*& _Inst);
+void op_idiv(VMThread& _Thread, uint8_t const*& _Inst);
+void op_imod(VMThread& _Thread, uint8_t const*& _Inst);
+void op_cmpi(VMThread& _Thread, uint8_t const*& _Inst);
+void op_ifeq(VMThread& _Thread, uint8_t const*& _Inst);
+void op_jif(VMThread& _Thread, uint8_t const*& _Inst);
+void op_jmp(VMThread& _Thread, uint8_t const*& _Inst);
+void op_ret(VMThread& _Thread, uint8_t const*& _Inst);
+void op_ilstore(VMThread& _Thread, uint8_t const*& _Inst);
+void op_ilload(VMThread& _Thread, uint8_t const*& _Inst);
+void op_call(VMThread& _Thread, uint8_t const*& _Inst);
+void op_nop(VMThread& _Thread, uint8_t const*& _Inst);
+void op_not(VMThread& _Thread, uint8_t const*& _Inst);
+
 #endif

@@ -7,234 +7,50 @@
 #include "function_manager.h"
 #include "opcodes.h"
 
-Int const I_0			=		0;
-Int const I_1			=		1;
-Int const I_2			=		2;
-Int const I_3			=		3;
+typedef void(*OpFunc)(VMThread&, uint8_t const*&);
 
-VMThread::VMThread(char const* _EntryFunction) {
+OpFunc op_lookup[] = {
+	op_nop, op_i0, op_i1, op_i2, op_i3, op_ic,
+	op_iadd, op_ilstore, op_ilload, op_ret, op_cmpi, op_ifeq, op_jif,
+	op_not, op_jmp, op_imul, op_idiv, op_imod, op_isub, op_call
+};
+
+VMThread::VMThread(uint64_t _FunctionsCount) : m_function_manager(_FunctionsCount) {
 }
 
-void VMThread::execute(char const* _EntryFunction) {
-	call_function(_EntryFunction);
+void VMThread::execute(uint64_t _EntryFuncId) {
+	call_function(_EntryFuncId);
 	run();
 }
 
 void VMThread::run() {
-	while (!m_call_frames.empty()) {
-		switch(*(inst()++)) {
-			case OP_I_0:
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Int), &I_0);
-				inst() += sizeof(int16_t);
-				break;
-			case OP_I_1:
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Int), &I_1);
-				inst() += sizeof(int16_t);
-				break;
-			case OP_I_2:
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Int), &I_2);
-				inst() += sizeof(int16_t);
-				break;
-			case OP_I_3:
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Int), &I_3);
-				inst() += sizeof(int16_t);
-				break;
-			case OP_I_C: {
-				uint16_t index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-
-				store(index, sizeof(Int), inst());
-				inst() += sizeof(Int);
-				break;
-			}
-			case OP_IADD: {
-				uint16_t l_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-				uint16_t r_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-
-				Int left = *static_cast<Int const*>(load(l_index, sizeof(Int)));
-				Int right = *static_cast<Int const*>(load(r_index, sizeof(Int)));
-
-				Int result = left + right;
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(int), &result);
-				inst() += sizeof(int16_t);
-				break;
-			}
-			case OP_MULI: {
-				uint16_t l_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-				uint16_t r_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-
-				Int left = *static_cast<Int const*>(load(l_index, sizeof(Int)));
-				Int right = *static_cast<Int const*>(load(r_index, sizeof(Int)));
-
-				Int result = left * right;
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(int), &result);
-				inst() += sizeof(int16_t);
-				break;
-			}
-			case OP_DIVI: {
-				uint16_t l_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-				uint16_t r_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-
-				Int left = *static_cast<Int const*>(load(l_index, sizeof(Int)));
-				Int right = *static_cast<Int const*>(load(r_index, sizeof(Int)));
-
-				Int result = left / right;
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(int), &result);
-				inst() += sizeof(int16_t);
-				break;
-			}
-			case OP_SUBI: {
-				uint16_t l_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-				uint16_t r_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-
-				Int left = *static_cast<Int const*>(load(l_index, sizeof(Int)));
-				Int right = *static_cast<Int const*>(load(r_index, sizeof(Int)));
-
-				Int result = left - right;
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(int), &result);
-				inst() += sizeof(int16_t);
-				break;
-			}
-			case OP_MODI: {
-				uint16_t l_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-				uint16_t r_index = *reinterpret_cast<uint16_t const*>(inst());
-				inst() += sizeof(int16_t);
-
-				Int left = *static_cast<Int const*>(load(l_index, sizeof(Int)));
-				Int right = *static_cast<Int const*>(load(r_index, sizeof(Int)));
-
-				Int result = left % right;
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(int), &result);
-				inst() += sizeof(int16_t);
-				break;
-			}
-			case OP_CMPI: {
-				Int const left = *static_cast<Int const*>(load(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Int)));
-				inst() += sizeof(int16_t);
-
-				Int const right = *static_cast<Int const*>(load(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Int)));
-				inst() += sizeof(int16_t);
-
-				Byte value = 0;
-
-				if (left == right) {
-					value = 1;
-				}
-				else if (left > right) {
-					value = 1;
-				}
-				else if (left < right) {
-					value = 2;
-				}
-
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Byte), &value);
-				inst() += sizeof(int16_t);
-				break;
-			}
-			case OP_IFEQ: {
-				Byte value = *reinterpret_cast<Byte const*>(load(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Byte)));
-				inst() += sizeof(int16_t);
-
-				Byte result = 0;
-
-				if (value == 1) {
-					result = 1;
-				}
-
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Byte), &result);
-				inst() += sizeof(int16_t);
-				break;
-			}
-			case OP_JIF: {
-				Byte value = *reinterpret_cast<Byte const*>(load(*reinterpret_cast<Byte const*>(inst()), sizeof(Byte)));
-				inst() += sizeof(int16_t);
-
-				int32_t jmp = *reinterpret_cast<int32_t const*>(inst());
-				inst() += sizeof(int32_t);
-
-				if (value == 1) {
-					inst() += jmp;
-				}
-				else {
-				}
-
-				break;
-			}
-			case OP_JMP: {
-				int32_t jmp = *reinterpret_cast<int32_t const*>(inst());
-				inst() += sizeof(int32_t);
-
-				inst() += jmp;
-				break;
-			}
-			case OP_RET: {
-				int params_size = call_frame()->m_info->m_params_size;
-				int return_size = call_frame()->m_info->m_locals_sizes[call_frame()->m_info->m_locals_count-1];
-
-				void* return_value = reinterpret_cast<void*>(call_frame()->m_local_frame[call_frame()->m_info->m_locals_count-1]);
-
-				pop_callframe();
-
-				if (!m_call_frames.empty()) {
-					call_frame()->m_stack_top -= params_size;
-					store(0, return_size, return_value);
-				}
-
-				break;
-			}
-			case OP_ILSTORE:
-				store(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Int), load(0, sizeof(Int)));
-				inst() += sizeof(int16_t);
-				break;
-			case OP_ILOAD:
-				store(0, sizeof(Int), load(*reinterpret_cast<uint16_t const*>(inst()), sizeof(Int))),
-				inst() += sizeof(int16_t);
-				break;
-			case OP_CALL: {
-				char const* signature = reinterpret_cast<char const*>(inst());
-				inst() += strlen(signature)+1;
-
-				int* top = reinterpret_cast<int*>(stack_top() - 8);
-				call_function(signature);
-
-				break;
-			}
-			default:
-				std::cout << "Unknown opcode" << *(inst()-1) << "\n";
-				break;
-		}
+	while (m_current_call_frame >= 0) {
+		uint8_t op = *inst();
+		OpFunc func = op_lookup[op];
+		func(*this, ++inst());
 	}
 }
 
 uint8_t* const VMThread::stack_top() {
-	if (m_call_frames.empty()) {
+	if (m_current_call_frame < 0) {
 		return m_stack;
 	}
 	else {
-		return call_frame()->m_stack_top;
+		return call_frame().m_stack_top;
 	}
+}
+
+int VMThread::current_callframe() {
+	return m_current_call_frame;
 }
 
 void VMThread::stack_push(void const* _Value, size_t _Size) {
-	if (call_frame()->m_stack_top + _Size > m_stack + XM_THREAD_STACK_SIZE) {
-		throw std::runtime_error("Stack overflow");
-	}
-
 	memcpy(stack_top(), _Value, _Size);
-	call_frame()->m_stack_top += _Size;
+	call_frame().m_stack_top += _Size;
 }
 
 void VMThread::stack_pop(size_t _Size) {
-	call_frame()->m_stack_top -= _Size;
+	call_frame().m_stack_top -= _Size;
 }
 
 void const* VMThread::stack_peek(size_t _Size) {
@@ -242,98 +58,64 @@ void const* VMThread::stack_peek(size_t _Size) {
 }
 
 
-void VMThread::call_function(char const* _Signature) {
-	push_callframe(FunctionManager::get_function(_Signature));
+void VMThread::call_function(uint64_t _Id) {
+	push_callframe(m_function_manager.get_function(_Id));
 }
 
-
-uint64_t VMThread::get_local_address(uint32_t _LocalIndex) {
-	return call_frame()->m_local_frame[_LocalIndex];
-}
-
-void* VMThread::get_local_pointer(uint32_t _LocalIndex) {
-	return reinterpret_cast<void*>(static_cast<size_t>(get_local_address(_LocalIndex)));
-}
-
-void VMThread::set_local_address(uint32_t _LocalIndex, uint64_t _Address) {
-	call_frame()->m_local_frame[_LocalIndex] = _Address;
-}
-
-void VMThread::store(uint32_t _Index, size_t _Size, void const* _Value) {
-	if (_Index == 0) {
+void VMThread::store(int16_t _Offset, size_t _Size, void const* _Value) {
+	if (_Offset < 0) {
 		stack_push(_Value, _Size);
 	}
 	else {
-		store_local(_Index-1, _Value, _Size);
+		store_local(_Offset, _Value, _Size);
 	}
 }
 
-void const* VMThread::load(uint32_t _Index, size_t _Size) {
-	if (_Index == 0) {
-		void const* ret = stack_peek(_Size);
+void const* VMThread::load(int16_t _Offset, size_t _Size) {
+	if (_Offset < 0) {
 		stack_pop(_Size);
-		return ret;
+		return stack_top();
 	}
 	else {
-		return load_local(_Index-1);
+		return load_local(_Offset);
 	}
 }
 
-void const* VMThread::load_local(uint32_t _LocalIndex) {
-	return reinterpret_cast<void const*>(call_frame()->m_local_frame[_LocalIndex]);
+void const* VMThread::load_local(int16_t _Offset) {
+	return call_frame().m_local_frame + _Offset;
 }
 
-void VMThread::store_local(uint32_t _LocalIndex, void const* _Value, size_t _Size) {
-	memcpy(get_local_pointer(_LocalIndex), _Value, _Size);
+void VMThread::store_local(int16_t _Offset, void const* _Value, size_t _Size) {
+	memcpy(call_frame().m_local_frame + _Offset, _Value, _Size);
 }
 
 
-CallFrame* VMThread::call_frame() {
-	return m_call_frames.top();
+CallFrame& VMThread::call_frame() {
+	return m_call_frames[m_current_call_frame];
 }
 
 void VMThread::push_callframe(FunctionInfo const* _Info) {
 	uint8_t* top = stack_top() - _Info->m_params_size;	
 
+	++m_current_call_frame;
+	
+	call_frame().m_info = _Info;
+	call_frame().m_local_frame = top;
+	call_frame().m_stack_top = top + _Info->m_stack_size;
+	call_frame().m_instruction_pointer = _Info->m_instructions;
+}
 
-	uint32_t local_bytes = _Info->m_stack_size;
-	uint32_t pointer_table_bytes = sizeof(int64_t)* _Info->m_locals_count;
-	uint32_t frame_size = local_bytes + pointer_table_bytes;
-
-	if (top + frame_size> stack_top() + XM_THREAD_STACK_SIZE) {
-		throw std::runtime_error("Stacko overflow");
-	}
-
-
-	CallFrame* cf = new CallFrame(_Info, top, top);
-
-
-	uint32_t offset = 0;
-	for (int i = 0; i < _Info->m_locals_count; i++) {
-		cf->m_local_frame[i] = static_cast<uint64_t>(reinterpret_cast<size_t>(cf->m_stack_frame + offset));
-
-		if (offset < _Info->m_params_size) {
-			memcpy(reinterpret_cast<void*>(cf->m_local_frame[i]), top + offset, _Info->m_locals_sizes[i]);
-		}
-
-		offset += _Info->m_locals_sizes[i];
-	}
-
-	m_call_frames.push(cf);
+FunctionManager& VMThread::function_manager() {
+	return m_function_manager;
 }
 
 void VMThread::pop_callframe() {
-	delete m_call_frames.top();
-	m_call_frames.pop();
+	m_current_call_frame -= 1;
 }
 
 uint8_t const*& VMThread::inst() {
-	return call_frame()->m_instruction_pointer;
+	return call_frame().m_instruction_pointer;
 }
 
 VMThread::~VMThread() {
-	while (!m_call_frames.empty()) {
-		delete m_call_frames.top();
-		m_call_frames.pop();
-	}
 }
