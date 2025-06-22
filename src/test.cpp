@@ -58,13 +58,13 @@ uint8_t calltest[] = {
 	OP_IFEQ,	255, 255,	255, 255,
 
 
-	OP_JIF,		255, 255,	30, 0, 0, 0,
+	OP_JIF,		255, 255,	24, 0, 0, 0,
 	OP_ILOAD,	0, 0,
 	OP_ILOAD,	4, 0,
-	OP_CALL,	0, 0, 0, 0, 0, 0, 0, 0,
+	OP_CALL,	0, 0,
 	OP_ILSTORE, 0, 0,
 	OP_IADD,	4, 0,		12, 0,				4, 0,
-	OP_JMP,		207, 255, 255, 255,
+	OP_JMP,		213, 255, 255, 255,
 	OP_RET,
 };
 
@@ -93,8 +93,8 @@ int main() {
 	printf("Test #1: let i = 0; while i < 1_000_000 { i = i + 1; }\n");
 	run_test(thread, 1);
 
-	/*printf("Test #2: let x,i = 0; while i < 1_000_000 { x = x + i * 2 - i / 3 + i % 5; i = i + 1; }\n");
-	run_test(thread, 2);*/
+	printf("Test #2: let x,i = 0; while i < 1_000_000 { x = x + i * 2 - i / 3 + i % 5; i = i + 1; }\n");
+	run_test(thread, 2);
 	
 	printf("Test #3: let x,i = 0; while i < 1_000_000 { x = add(x, i); i = i + 1; } where add(a,b) => a + b;\n");;
 	run_test(thread, 3);

@@ -75,7 +75,7 @@ public:
 	~VMThread();
 private:
 	FunctionManager m_function_manager;
-	uint8_t m_stack[XM_THREAD_STACK_SIZE];
+	uint8_t m_stack[XM_THREAD_STACK_SIZE] = {0};
 	CallFrame m_call_frames[40];
 	int m_current_call_frame = -1;
 

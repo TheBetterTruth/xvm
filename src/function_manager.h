@@ -8,17 +8,12 @@
 
 class FunctionManager {
 public:
-	FunctionManager(uint64_t _FunctionCount);
+	FunctionManager(uint32_t _FunctionCount);
 	~FunctionManager();
-	FunctionInfo const* register_function(char const* _Signature, uint64_t _Id, uint32_t _ParamsSize, uint8_t _Flags, uint32_t _StackSize, uint32_t _ReturnSize, uint8_t const* _Instructions);
-
-	FunctionInfo const* get_function(uint64_t _Id);
+	FunctionInfo const* register_function(char const* _Signature, uint32_t _Id, uint16_t _ParamsSize, uint8_t _Flags, uint16_t _StackSize, uint16_t _ReturnSize, uint8_t const* _Instructions);
+	FunctionInfo const* get_function(uint32_t _Id);
 private:
-	FunctionEntry* m_function_table;
-	FunctionInfo* m_loaded_functions;
-
-	FunctionInfo const* get_loaded_function(uint64_t _Id);
-	FunctionInfo const* load_function(uint64_t _Id);
+	FunctionInfo* m_function_table;
 };
 
 

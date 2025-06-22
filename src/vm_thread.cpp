@@ -7,13 +7,17 @@
 #include "function_manager.h"
 #include "opcodes.h"
 
-typedef void(*OpFunc)(VMThread&, uint8_t const*&);
+typedef void(*OpFunc)(VMThread*, uint8_t const*&);
+
+int exec = 0;
 
 OpFunc op_lookup[] = {
 	op_nop, op_i0, op_i1, op_i2, op_i3, op_ic,
 	op_iadd, op_ilstore, op_ilload, op_ret, op_cmpi, op_ifeq, op_jif,
 	op_not, op_jmp, op_imul, op_idiv, op_imod, op_isub, op_call
 };
+
+const int op_size = sizeof(op_lookup) / sizeof(OpFunc);
 
 VMThread::VMThread(uint64_t _FunctionsCount) : m_function_manager(_FunctionsCount) {
 }
@@ -25,9 +29,15 @@ void VMThread::execute(uint64_t _EntryFuncId) {
 
 void VMThread::run() {
 	while (m_current_call_frame >= 0) {
-		uint8_t op = *inst();
+		uint8_t op = *m_call_frames[m_current_call_frame].m_instruction_pointer;
+		m_call_frames[m_current_call_frame].m_instruction_pointer += 1;
+
+		if (op > op_size) {
+			printf("Unexpected op: %d\n", op);
+			throw std::runtime_error("");
+		}
 		OpFunc func = op_lookup[op];
-		func(*this, ++inst());
+		func(this, m_call_frames[m_current_call_frame].m_instruction_pointer);
 	}
 }
 
@@ -59,7 +69,7 @@ void const* VMThread::stack_peek(size_t _Size) {
 
 
 void VMThread::call_function(uint64_t _Id) {
-	push_callframe(m_function_manager.get_function(_Id));
+		push_callframe(m_function_manager.get_function(_Id));
 }
 
 void VMThread::store(int16_t _Offset, size_t _Size, void const* _Value) {
